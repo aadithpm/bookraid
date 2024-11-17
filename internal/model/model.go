@@ -3,7 +3,7 @@ package model
 import (
 	"aadith/libgen-search/internal/http"
 	"fmt"
-	"net/url"
+	"regexp"
 
 	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/bubbles/table"
@@ -174,17 +174,14 @@ func (u *UiModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				case tea.KeyEnter:
 					selected, err := http.GetSearchListingByTableRow(u.table.SelectedRow(), u.scrappedResults)
 					if err != nil {
+						u.logger.Error(err.Error())
 						u.logger.Fatal("selected book not found")
 					}
 					u.catalogId = selected.CatalogId
-					savePath, err := http.MakeDownloadPathFromListing(u.savePath, *selected, http.Epub)
-					u.savePath = savePath.String()
-					if err != nil {
-						u.logger.Fatal("error downloading book")
-					}
+					u.savePath = http.MakeDownloadPathFromListing(u.savePath, *selected, http.Epub)
 					u.textInput.SetValue(u.savePath)
 					u.state = Confirmation
-					return u, cmd
+					return u, tea.Printf("Please confirm the download path")
 				default:
 					t, cmd := u.table.Update(msg)
 					u.table = &t
@@ -207,13 +204,14 @@ func (u *UiModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					v := u.textInput.Value()
 					downloadUrl, err := u.scrapper.DownloadFromTag(u.catalogId)
 					if err != nil {
+						u.logger.Error(err.Error())
 						u.logger.Fatal("error downloading book")
 					}
-					pathUrl, err := url.Parse(v)
-					if err != nil {
-						u.logger.Fatal("download path is invalid")
+					// validate path
+					if !IsValidPath(v) {
+						return u, tea.Printf("⚠️ That is not a valid Windows path. Please enter a valid file path")
 					}
-					u.downloadClient = http.NewGetterClient(downloadUrl, pathUrl)
+					u.downloadClient = http.NewGetterClient(downloadUrl, v)
 					u.state = Downloading
 					return u, u.spinner.Tick
 				default:
@@ -236,6 +234,7 @@ func (u *UiModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				select {
 				case err := <-u.downloadErrors:
 					if err != nil {
+						u.logger.Error(err.Error())
 						u.logger.Fatal("error downloading")
 					}
 					u.state = Done
@@ -268,9 +267,7 @@ func (u *UiModel) View() string {
 	case ListView:
 		return u.table.View() + "\n" + u.table.HelpView()
 	case Confirmation:
-		return fmt.Sprintf(
-			"%s\n%s\n", "Please confirm the download path", u.textInput.View(),
-		)
+		return fmt.Sprintf("%s\n", u.textInput.View())
 	case Downloading:
 		return fmt.Sprintf("%s Downloading %s...\n", u.spinner.View(), *u.searchQuery)
 	case Done:
@@ -278,4 +275,9 @@ func (u *UiModel) View() string {
 	default:
 		return "This is a weird state...\n"
 	}
+}
+
+func IsValidPath(path string) bool {
+	regexPath := `^(?:[A-Z]:\\){1}(?:[^<>:"/\\|\?\*]+\\)+(?:[^<>:"/\\|\?\*]+\.[A-Za-z1-9]+)$`
+	return regexp.MustCompile(regexPath).MatchString(path)
 }

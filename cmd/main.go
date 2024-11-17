@@ -4,6 +4,7 @@ import (
 	"aadith/libgen-search/internal/http"
 	"aadith/libgen-search/internal/model"
 	"os"
+	"path/filepath"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/joho/godotenv"
@@ -26,7 +27,7 @@ func main() {
 	}
 	baseUrl := os.Getenv(BaseUrlEnvKey)
 	downloadUrl := os.Getenv(DownloadUrlEnvKey)
-	downloadPath := os.Getenv(DownloadPathEnvKey)
+	downloadPath := filepath.FromSlash(os.Getenv(DownloadPathEnvKey))
 	scrapper, err := http.NewScrapper(baseUrl, downloadUrl, downloadPath)
 	if err != nil {
 		sugar.Fatal(err)

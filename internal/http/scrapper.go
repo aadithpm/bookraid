@@ -32,7 +32,7 @@ var IsbnSearchUrl = "https://isbnsearch.org/isbn/"
 type LibgenScrapper struct {
 	baseUrl         *url.URL
 	downloadBaseUrl *url.URL
-	downloadPath    *url.URL
+	downloadPath    string
 	language        Language
 	format          Format
 }
@@ -100,21 +100,17 @@ func NewScrapper(baseUrl string, downloadBaseUrl string, downloadPath string) (*
 	if err != nil {
 		return nil, fmt.Errorf("error reading base url: %s", err)
 	}
-	f, err := url.ParseRequestURI(downloadPath)
-	if err != nil {
-		return nil, fmt.Errorf("error reading download path to save file: %s", err)
-	}
 	return &LibgenScrapper{
 		baseUrl:         u,
 		downloadBaseUrl: d,
-		downloadPath:    f,
+		downloadPath:    downloadPath,
 		language:        LangEnglish,
 		format:          FormatEpub,
 	}, nil
 }
 
 func (l *LibgenScrapper) GetDownloadPath() string {
-	return l.downloadPath.Path
+	return l.downloadPath
 }
 
 // SearchByTerm returns a SearchListing by looking up a search term at the LibgenScrapper's baseUrl.

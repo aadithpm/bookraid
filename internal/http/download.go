@@ -16,11 +16,11 @@ var (
 	Epub SupportedExtensions = "epub"
 )
 
-func NewGetterClient(downloadUrl *url.URL, destinationUrl *url.URL) *getter.Client {
+func NewGetterClient(downloadUrl *url.URL, destinationPath string) *getter.Client {
 	return &getter.Client{
 		Ctx:  context.Background(),
 		Dir:  false,
-		Dst:  destinationUrl.Path,
+		Dst:  destinationPath,
 		Mode: getter.ClientModeFile,
 		Getters: map[string]getter.Getter{
 			"http": &getter.HttpGetter{},
@@ -29,14 +29,9 @@ func NewGetterClient(downloadUrl *url.URL, destinationUrl *url.URL) *getter.Clie
 	}
 }
 
-func MakeDownloadPathFromListing(baseUrl string, details SearchListing, extension SupportedExtensions) (*url.URL, error) {
+func MakeDownloadPathFromListing(baseUrl string, details SearchListing, extension SupportedExtensions) string {
 	invalidRegex := regexp.MustCompile(`[\/<>:"\\|\?\*]+`)
 	folder := invalidRegex.ReplaceAllString(strings.ToValidUTF8(details.Author, ""), "")
 	fileName := invalidRegex.ReplaceAllString(strings.ToValidUTF8(details.Title, ""), "")
-	u := fmt.Sprintf("%s/%s - %s/%s.%s", baseUrl, folder, fileName, fileName, extension)
-	finalUrl, err := url.Parse(u)
-	if err != nil {
-		return nil, err
-	}
-	return finalUrl, nil
+	return fmt.Sprintf("%s\\%s - %s\\%s.%s", baseUrl, folder, fileName, fileName, extension)
 }
