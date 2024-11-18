@@ -3,11 +3,9 @@ package main
 import (
 	"aadith/libgen-search/internal/http"
 	"aadith/libgen-search/internal/model"
-	"os"
 	"path/filepath"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/joho/godotenv"
 	"go.uber.org/zap"
 )
 
@@ -21,13 +19,9 @@ func main() {
 	logger, _ := zap.NewProduction()
 	defer logger.Sync()
 	sugar := logger.Sugar()
-	err := godotenv.Load()
-	if err != nil {
-		logger.Fatal("error loading .env file")
-	}
-	baseUrl := os.Getenv(BaseUrlEnvKey)
-	downloadUrl := os.Getenv(DownloadUrlEnvKey)
-	downloadPath := filepath.FromSlash(os.Getenv(DownloadPathEnvKey))
+	baseUrl := "https://libgen.is/fiction"
+	downloadUrl := "http://library.lol/fiction"
+	downloadPath := filepath.FromSlash("G:/My Drive/Books/Novels")
 	scrapper, err := http.NewScrapper(baseUrl, downloadUrl, downloadPath)
 	if err != nil {
 		sugar.Fatal(err)

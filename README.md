@@ -6,7 +6,15 @@ Nifty [bubbletea](https://github.com/charmbracelet/bubbletea) program to get boo
 
 #### Usage
 
-Add a `.env` file with the base Libgen URL as `BASE_URL`, base Libgen download URL as `BASE_DL_URL` and a download path as `DL_PATH`. Run the program. Alternatively, use the binary and set the download path manually.
+Run `main.go`, you can change URL and destination parameters in `main.go`. Alternatively, if you're on Windows, you can run the Windows binary.
+
+```
+# Run program
+go run cmd/main.go
+
+# Build from source
+go build -o bookraid.exe cmd/main.go
+```
 
 ---
 
